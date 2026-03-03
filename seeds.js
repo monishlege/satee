@@ -60,7 +60,6 @@ async function main() {
       const location = await getIssLocation();
       const payload = simulate(ts, elev, w, { lat: location.lat, lon: location.lon, name: location.name });
       try {
-        console.log("Sending payload:", JSON.stringify(payload, null, 2));
         const r = await axios.post(`${NODE}/ingest`, payload, { headers: { Authorization: `Bearer ${TOKEN}` }, timeout: 2000 });
         if (i % 10 === 0) console.log(`seed ${i}: ISS over ${location.name} (${location.lat.toFixed(2)}, ${location.lon.toFixed(2)})`);
       } catch (e) {
