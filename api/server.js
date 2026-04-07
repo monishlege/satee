@@ -238,7 +238,7 @@ app.get("/control/lean", (req, res) => {
   res.json({ lean_deg: currentLeanDeg });
 });
 
-app.post("/control/lean", auth, (req, res) => {
+app.post("/control/lean", (req, res) => {
   const { lean_deg } = req.body || {};
   if (typeof lean_deg !== "number") return res.status(400).json({ error: "lean_deg must be a number" });
   currentLeanDeg = lean_deg;

@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "../auth/AuthContext";
 
-const NODE_URL = import.meta.env.VITE_NODE_URL || "http://localhost:3000";
+const NODE_URL = import.meta.env.VITE_NODE_URL || (import.meta.env.PROD ? "/api" : "http://localhost:3000");
 
 export default function LeanControl() {
   const [leanDeg, setLeanDeg] = useState(0);
   const [isUpdating, setIsUpdating] = useState(false);
-  const { token } = useAuth();
 
   useEffect(() => {
     // Initial fetch of current lean deg
@@ -26,8 +24,7 @@ export default function LeanControl() {
       await fetch(`${NODE_URL}/control/lean`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({ lean_deg: newVal })
       });
