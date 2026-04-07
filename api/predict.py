@@ -35,25 +35,28 @@ def weather_impact(w: str | None) -> float:
 
 def load_model():
   global model_bundle
+  if model_bundle is not None:
+    return model_bundle
   try:
-    model_bundle = load(MODEL_PATH)
-    log.info("Model loaded")
+    if os.path.exists(MODEL_PATH):
+      model_bundle = load(MODEL_PATH)
+      log.info("Model loaded")
+    else:
+      log.warning(f"Model path {MODEL_PATH} not found, using rule-based fallback")
   except Exception as e:
     log.warning(f"Model not loaded: {e}")
-    model_bundle = None
+  return model_bundle
 
 app = FastAPI()
 
-@app.on_event("startup")
-def startup():
-  load_model()
-
 @app.get("/health")
 def health():
-  return {"ok": True, "model": bool(model_bundle)}
+  bundle = load_model()
+  return {"ok": True, "model": bool(bundle)}
 
 @app.post("/predict")
 def predict(reading: Reading):
+  bundle = load_model()
   wimp = weather_impact(reading.weather)
   features = {
     "l_dbm": reading.l_dbm,
@@ -71,9 +74,9 @@ def predict(reading: Reading):
   }
   t0 = time.time()
   try:
-    if model_bundle:
-      clf = model_bundle["model"]
-      feats = model_bundle["features"]
+    if bundle:
+      clf = bundle["model"]
+      feats = bundle["features"]
       X = np.array([[features[f] if features[f] is not None else -120 for f in feats]])
       pred = clf.predict(X)[0]
       proba = clf.predict_proba(X)[0]
