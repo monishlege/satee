@@ -135,51 +135,8 @@ app.post("/ingest", auth, async (req, res) => {
     log.warn({ err: parse.error }, "Invalid payload");
     return res.status(400).json({ error: "Invalid payload", details: parse.error.flatten() });
   }
-  const r = { ...parse.data };
-  const key = Math.floor(r.timestamp);
-  log.info({ key, location: r.location?.name }, "Ingested reading");
-  if (r.lean_deg === null || r.lean_deg === undefined) {
-    r.lean_deg = currentLeanDeg;
-  }
-  memReadings.set(key, r);
-  // keep last 2000
-  if (memReadings.size > 2000) {
-    const oldest = [...memReadings.keys()].sort((a,b)=>a-b)[0];
-    memReadings.delete(oldest);
-  }
-  if (fdb) {
-    try {
-      await fdb.ref(`/readings/${key}`).set(r);
-    } catch (e) {
-      log.warn({ err: e?.message }, "Firebase write /readings failed");
-    }
-  }
-  // predict
-  let pred;
-  try {
-    const predictUrl = FASTAPI_URL || "/api/predict";
-    if (predictUrl) {
-      // For Vercel, if FASTAPI_URL is relative, use internal calling or assume it's exposed
-      const fullUrl = predictUrl.startsWith("http") ? `${predictUrl}/predict` : `${req.protocol}://${req.get("host")}${predictUrl}/predict`;
-      const resp = await axios.post(fullUrl, r, { timeout: 2000 });
-      pred = resp.data;
-    } else {
-      pred = rulePredict(r);
-    }
-  } catch (e) {
-    log.warn({ err: e?.message }, "FASTAPI predict failed; using rule");
-    pred = rulePredict(r);
-  }
-  latestPrediction = pred;
-  if (fdb) {
-    try {
-      await fdb.ref(`/predictions/latest`).set(pred);
-      await fdb.ref(`/predictions/${pred.timestamp || key}`).set(pred);
-    } catch (e) {
-      log.warn({ err: e?.message }, "Firebase write /predictions failed");
-    }
-  }
-  res.json({ ok: true, key, pred });
+  const result = await processIngestion(parse.data);
+  res.json({ ok: true, ...result });
 });
 
 app.post("/auth/issue", (req, res) => {
@@ -312,6 +269,7 @@ app.get("/demo/tick", async (req, res) => {
 
 async function processIngestion(r) {
   const key = Math.floor(r.timestamp);
+  log.info({ key, location: r.location?.name }, "Ingested reading");
   if (r.lean_deg === null || r.lean_deg === undefined) {
     r.lean_deg = currentLeanDeg;
   }
