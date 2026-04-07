@@ -6,7 +6,7 @@ export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const NODE_URL = import.meta.env.VITE_NODE_URL || "http://localhost:3000";
+  const NODE_URL = import.meta.env.VITE_NODE_URL || (import.meta.env.PROD ? "/api" : "http://localhost:3000");
 
   async function onSubmit(e) {
     e.preventDefault();
