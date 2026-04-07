@@ -4,6 +4,8 @@ import { log, warn } from "./utils/logger";
 import SignalChart from "./components/SignalChart.jsx";
 import PredictionCard from "./components/PredictionCard.jsx";
 import BandStatus from "./components/BandStatus.jsx";
+import ISSLiveFeed from "./components/ISSLiveFeed.jsx";
+import LeanControl from "./components/LeanControl.jsx";
 import { AuthProvider, useAuth } from "./auth/AuthContext.jsx";
 import Login from "./pages/Login.jsx";
 
@@ -35,13 +37,27 @@ function Dashboard() {
     if (prediction) log("latest prediction", prediction);
   }, [latestReading, prediction]);
 
+  const locationInfo = useMemo(() => {
+    if (!latestReading || !latestReading.location) return "Locating ISS...";
+    const { lat, lon } = latestReading.location;
+    const name = latestReading.location.name || latestReading.locationName;
+    const coordStr = `${Math.abs(lat).toFixed(2)}°${lat >= 0 ? "N" : "S"}, ${Math.abs(lon).toFixed(2)}°${lon >= 0 ? "E" : "W"}`;
+    
+    if (name && name !== "Unknown Area" && name !== "Unknown") {
+      return `ISS monitoring over ${name} (${coordStr})`;
+    }
+    return `ISS monitoring over ${coordStr}`;
+  }, [latestReading]);
+
   return (
     <div className="max-w-6xl mx-auto p-4">
       <div className="mb-4">
-        <h1 className="text-2xl font-bold">Adaptive Multi-Band Satellite Selector</h1>
-        <div className="text-sm text-gray-600">ISS monitoring over Bengaluru (12.97°N, 77.59°E)</div>
+        <h1 className="text-2xl font-bold text-gray-800">Adaptive Multi-Band Satellite Selector</h1>
+        <div className="text-sm font-medium text-blue-600 bg-blue-50 inline-block px-2 py-1 rounded mt-1">
+          {locationInfo}
+        </div>
         <div className="mt-2 text-xs text-gray-500">
-          {user ? <>Signed in as <span className="font-medium">{user.username}</span> <button className="ml-2 text-blue-600" onClick={()=>setToken("")}>Logout</button></> : "Not signed in"}
+          {user ? <>Signed in as <span className="font-medium text-gray-700">{user.username}</span> <button className="ml-2 text-blue-600 hover:underline" onClick={()=>setToken("")}>Logout</button></> : "Not signed in"}
         </div>
       </div>
 
@@ -62,6 +78,8 @@ function Dashboard() {
           </div>
         </div>
         <div className="lg:col-span-1">
+          <LeanControl />
+          <ISSLiveFeed />
           <BandStatus latestReading={latestReading} />
         </div>
       </div>

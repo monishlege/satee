@@ -17,6 +17,7 @@ export function sanitizeReading(raw) {
   const temp = toNumber(raw.temperature, null);
   const hum = toNumber(raw.humidity, null);
   const elev = toNumber(raw.elevation_deg, null);
+  const lean = toNumber(raw.lean_deg, null);
   const weather = typeof raw.weather === "string" ? raw.weather : "Unknown";
   const lat = toNumber(raw?.location?.lat, null);
   const lon = toNumber(raw?.location?.lon, null);
@@ -30,6 +31,7 @@ export function sanitizeReading(raw) {
     temperature: temp,
     humidity: hum,
     elevation_deg: elev,
+    lean_deg: lean,
     weather,
     location: lat !== null && lon !== null ? { lat, lon } : null
   };

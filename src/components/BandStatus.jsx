@@ -21,6 +21,7 @@ export default function BandStatus({ latestReading }) {
       { label: "C-band", value: latestReading.c_dbm, unit: " dBm", color: "bg-cband" },
       { label: "X-band", value: latestReading.x_dbm, unit: " dBm", color: "bg-xband" },
       { label: "Elevation", value: latestReading.elevation_deg, unit: "°", color: "bg-gray-300" },
+      { label: "Lean Position", value: latestReading.lean_deg, unit: "°", color: "bg-green-300" },
       { label: "Temperature", value: latestReading.temperature, unit: "°C", color: "bg-gray-300" },
       { label: "Humidity", value: latestReading.humidity, unit: "%", color: "bg-gray-300" },
       { label: "Weather", value: latestReading.weather, unit: "", color: "bg-gray-300" }

@@ -1,6 +1,8 @@
 import axios from "axios";
+import dotenv from "dotenv";
+dotenv.config();
 
-const NODE = process.env.NODE_URL || "http://localhost:3000";
+const NODE = process.env.NODE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}/api` : "http://localhost:3000");
 const TOKEN = process.env.ARDUINO_JWT || process.env.ARDUINO_TOKEN || "dev-token";
 const CONTINUOUS = String(process.env.SEED_CONTINUOUS || "").toLowerCase() === "true" || process.env.SEED_CONTINUOUS === "1";
 
@@ -33,17 +35,21 @@ function simulate(ts, elev, weather, location) {
 async function getIssLocation() {
   try {
     // Fetch location
-    const response = await axios.get("http://api.open-notify.org/iss-now.json");
+    const response = await axios.get("http://api.open-notify.org/iss-now.json", { timeout: 5000 });
     const lat = parseFloat(response.data.iss_position.latitude);
     const lon = parseFloat(response.data.iss_position.longitude);
 
-    // Fetch locality
-    const geoResponse = await axios.get(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
-    const locality = geoResponse.data.locality || geoResponse.data.principalSubdivision || "Unknown";
-
-    return { lat, lon, name: locality };
+    try {
+      // Fetch locality
+      const geoResponse = await axios.get(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`, { timeout: 5000 });
+      const locality = geoResponse.data.locality || geoResponse.data.principalSubdivision || "Unknown";
+      return { lat, lon, name: locality };
+    } catch (geoError) {
+      console.error("Failed to fetch locality from BigDataCloud:", geoError.message);
+      return { lat, lon, name: "Unknown Area" };
+    }
   } catch (error) {
-    console.error("Failed to fetch ISS location:", error.message);
+    console.error("Failed to fetch ISS location from OpenNotify:", error.message);
     return { lat: 12.97, lon: 77.59, name: "Bangalore" }; // Fallback location
   }
 }
@@ -61,16 +67,16 @@ async function main() {
       const payload = simulate(ts, elev, w, { lat: location.lat, lon: location.lon, name: location.name });
       try {
         const r = await axios.post(`${NODE}/ingest`, payload, { headers: { Authorization: `Bearer ${TOKEN}` }, timeout: 2000 });
-        if (i % 10 === 0) console.log(`seed ${i}: ISS over ${location.name} (${location.lat.toFixed(2)}, ${location.lon.toFixed(2)})`);
+        console.log(`seed ${i}: ISS over ${location.name} (${location.lat.toFixed(2)}, ${location.lon.toFixed(2)})`);
       } catch (e) {
         console.error("seed error", e.message);
       }
       i++;
-      await new Promise(res=>setTimeout(res, 2000));
+      await new Promise(res=>setTimeout(res, 1000));
     }
   } else {
     for (let i=0;i<count;i++){
-      const ts = Date.now() + i*2000;
+      const ts = Date.now() + i*1000;
       const elev = Math.max(5, Math.min(85, 10 + 70*Math.sin(i/30.0)));
       const w = weatherFor(i);
       const location = await getIssLocation();

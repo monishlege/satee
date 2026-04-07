@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview --port 5174",
-    "server": "node server.js",
+    "server": "node api/server.js",
     "seed": "node seeds.js"
   },
   "dependencies": {

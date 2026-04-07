@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "rewrites": [
+    { "source": "/api/predict/(.*)", "destination": "/api/predict.py" },
+    { "source": "/api/(.*)", "destination": "/api/server.js" }
+  ],
+  "env": {
+    "NODE_ENV": "production",
+    "FASTAPI_URL": "/api/predict"
+  }
+}
