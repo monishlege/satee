@@ -6,14 +6,11 @@ import PredictionCard from "./components/PredictionCard.jsx";
 import BandStatus from "./components/BandStatus.jsx";
 import ISSLiveFeed from "./components/ISSLiveFeed.jsx";
 import LeanControl from "./components/LeanControl.jsx";
-import { AuthProvider, useAuth } from "./auth/AuthContext.jsx";
-import Login from "./pages/Login.jsx";
 
 function Dashboard() {
   const [readings, setReadings] = useState([]);
   const [prediction, setPrediction] = useState(null);
   const [errors, setErrors] = useState([]);
-  const { token, setToken, user } = useAuth();
 
   useEffect(() => {
     const unsubR = subscribeReadings(
@@ -69,9 +66,6 @@ function Dashboard() {
         <div className="text-sm font-medium text-blue-600 bg-blue-50 inline-block px-2 py-1 rounded mt-1">
           {locationInfo}
         </div>
-        <div className="mt-2 text-xs text-gray-500">
-          {user ? <>Signed in as <span className="font-medium text-gray-700">{user.username}</span> <button className="ml-2 text-blue-600 hover:underline" onClick={()=>setToken("")}>Logout</button></> : "Not signed in"}
-        </div>
       </div>
 
       {errors.length > 0 && (
@@ -105,14 +99,5 @@ function Dashboard() {
 }
 
 export default function App() {
-  return (
-    <AuthProvider>
-      <Content />
-    </AuthProvider>
-  );
-}
-
-function Content() {
-  const { token } = useAuth();
-  return token ? <Dashboard /> : <Login />;
+  return <Dashboard />;
 }
