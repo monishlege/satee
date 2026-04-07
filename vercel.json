@@ -6,6 +6,7 @@
   ],
   "env": {
     "NODE_ENV": "production",
-    "FASTAPI_URL": "/api/predict"
+    "FASTAPI_URL": "/api/predict",
+    "UV_LINK_MODE": "copy"
   }
 }
